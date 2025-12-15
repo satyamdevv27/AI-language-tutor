@@ -1,0 +1,4 @@
+-- starting on project 
+
+15/12/25 : Today i'll be working on file structure and 
+then i will start working with authentication of this project using JWT tokens 
