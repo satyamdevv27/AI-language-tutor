@@ -1,25 +1,32 @@
-import usermodel from '../models/user.js';
-import bodyParser from 'body-parser';
-export const signup = async(req, res) => {
-    // Registration logic here4
-    try {
-      const {name,email,password}=req.body;
-      const user = await usermodel.findone({email})
-        if(user){
-            return res.status(400).json({error:"User already exists"})
-        }
-        const usermodel = new usermodel({name ,email,password});
-        usermodel.password = await bycrypt.hasj(password,10);
-        await usermodel.save();
-        res.status(201).json({message:"signup successfull"});
+import User from "../models/user.js";
+import bcrypt from "bcryptjs";
 
+export const signup = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-      
-    } catch (error) {
-        res.status(500).json({error:"Internal server error"});
+    // check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
     }
-};
 
-export default {
-    signup
+    // hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // create user
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: "Signup successful" });
+
+  } catch (error) {
+    console.error("Signup error:", error); // 👈 IMPORTANT
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
