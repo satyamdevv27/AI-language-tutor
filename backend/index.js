@@ -1,20 +1,26 @@
-const express = require('express')
+// index.js
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-const cors = require('cors')
-require("./models/db")
-require('dotenv').config()
-const app = express()
-const port = process.env.port || 3000;
+import authRoutes from "./routes/authroutes.js";
+import "./models/db.js";
 
+dotenv.config();
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(cors())
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
-app.listen(port, () => {
-  console.log(` app listening on port ${port}`)
-})
+app.use("/auth", authRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}`);
+});
