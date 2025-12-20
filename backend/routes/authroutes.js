@@ -1,13 +1,13 @@
 // routes/authroutes.js
 import express from "express";
 import { signup } from "../controllers/authcontroller.js";
+import { login } from "../controllers/authcontroller.js";
 import { signupvalidation } from "../middleware/authvalidation.js";
+import { loginvalidation } from "../middleware/authvalidation.js";
 
 const router = express.Router();
 
-router.post("/login", (req, res) => {
-  res.send("Login route");
-});
+router.post("/login",  loginvalidation, login);
 
 router.post("/signup", signupvalidation, signup);
 
