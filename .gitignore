@@ -2,5 +2,5 @@ backend/node_modules
 backend/.env
 backend/tasks.txt
 
-frontend/main/node_modules
-frontend/main/.env
+frontend/node_modules
+frontend/.env
