@@ -5,6 +5,7 @@ import dotenv from "dotenv";
  dotenv.config();
 
  import authRoutes from "./routes/authroutes.js";
+ import chatRoutes from "./routes/chatroutes.js";
  import "./models/db.js";
 
 const app = express();
@@ -15,6 +16,9 @@ app.use(express.urlencoded({ extended: true }));
  app.use(cors());
 
  app.use("/auth", authRoutes);
+
+
+app.use("/api", chatRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
