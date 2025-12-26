@@ -2,9 +2,9 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/login.jsx";
 import Signup from "./pages/signup.jsx";
 import Home from "./pages/dashboard.jsx";
-
 import PrivateRoute from "./pages/protectedRoute.jsx";
 import Reset from "./pages/reset.jsx";
+import Chat from "./pages/chat.jsx";
 function App() {
   return (
     <div className="App">
@@ -21,6 +21,14 @@ function App() {
           }
         />
         <Route path="/reset" element={<Reset />} />
+        <Route
+          path="/chat"
+          element={
+            <PrivateRoute>
+              <Chat />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </div>
   );
