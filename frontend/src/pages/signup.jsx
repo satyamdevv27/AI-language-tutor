@@ -1,5 +1,4 @@
-
-
+import { Link } from "react-router-dom";
 
 import { useState } from "react";
 
@@ -97,6 +96,13 @@ const Signup = () => {
           >
             {loading ? "Signing up..." : "Sign Up"}
           </button>
+
+          <p>
+            Already have an account?{" "}
+            <Link to="/login" className="text-indigo-600 underline">
+              Login
+            </Link>
+          </p>
         </form>
       </div>
     </div>

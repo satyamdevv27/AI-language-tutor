@@ -1,6 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import {useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -8,7 +8,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const Navigate = useNavigate(); 
+  const Navigate = useNavigate();
 
   const handlelogin = async (e) => {
     e.preventDefault();
@@ -26,21 +26,21 @@ function Login() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if(!res.ok){
+      if (!res.ok) {
         setError(data.message);
         return;
       }
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      alert("Login successful!");
+      localStorage.setItem("loggedinuser", data.user.name);
+      alert("Login successful");
       Navigate("/home");
       setEmail("");
       setPassword("");
     } catch (err) {
+      console.log(err);
       setError("server error");
-    
-    }
-    finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -51,7 +51,7 @@ function Login() {
         <h2 className="font-[Lato] text-2xl font-bold pt-2 ml-15">login</h2>
         <form
           action=""
-           onSubmit={handlelogin}
+          onSubmit={handlelogin}
           className="flex flex-col justify-center items-center   pt-13 pb-15 pl-15 pr-15 gap-3"
         >
           <div className="flex flex-col">
@@ -82,7 +82,6 @@ function Login() {
                 setPassword(e.target.value);
               }}
               value={password}
-              
             />
           </div>
           <p>{error}</p>
@@ -93,6 +92,12 @@ function Login() {
           >
             login
           </button>
+          <p>
+            forget password {""}
+            <Link to={"/reset"} className="text-indigo-600 underline">
+              reset
+            </Link>
+          </p>
         </form>
       </div>
     </div>
