@@ -15,10 +15,7 @@ function Chat() {
   const newChatBtnRef = useRef(null);
 
   /* ---------------- USER ---------------- */
-  const [loggedInUser] = useState(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    return user ? user.name : "";
-  });
+  const loggedInUser = JSON.parse(localStorage.getItem("user"))?.name || "User";
 
   /* ---------------- FETCH SESSIONS ---------------- */
   useEffect(() => {
@@ -34,11 +31,7 @@ function Chat() {
 
         if (Array.isArray(data)) {
           setSessions(data);
-
-          // ✅ auto open latest session
-          if (data.length > 0) {
-            setActiveSessionId(data[0]._id);
-          }
+          if (data.length > 0) setActiveSessionId(data[0]._id);
         }
       } catch (err) {
         console.error("Failed to fetch sessions", err);
@@ -48,7 +41,7 @@ function Chat() {
     fetchSessions();
   }, []);
 
-  /* ---------------- FETCH MESSAGES FOR ACTIVE SESSION ---------------- */
+  /* ---------------- FETCH MESSAGES ---------------- */
   useEffect(() => {
     if (!activeSessionId) return;
 
@@ -64,44 +57,14 @@ function Chat() {
         );
 
         const data = await res.json();
-
-        if (Array.isArray(data)) {
-          setMessages(data);
-        } else {
-          setMessages([]);
-        }
+        setMessages(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load messages", err);
-        setMessages([]);
       }
     };
 
     fetchMessages();
   }, [activeSessionId]);
-
-  const handleDeleteSession = async (sessionId) => {
-    if (!window.confirm("Delete this chat?")) return;
-
-    try {
-      await fetch(`http://localhost:8080/api/chat/session/${sessionId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      // remove from UI
-      setSessions((prev) => prev.filter((s) => s._id !== sessionId));
-
-      // if deleted chat was open
-      if (activeSessionId === sessionId) {
-        setActiveSessionId(null);
-        setMessages([]);
-      }
-    } catch (err) {
-      console.error(err,"Failed to delete chat");
-    }
-  };
 
   /* ---------------- AUTO SCROLL ---------------- */
   useEffect(() => {
@@ -110,16 +73,9 @@ function Chat() {
 
   /* ---------------- NEW CHAT ---------------- */
   const handleNewChat = async () => {
-    // HARD STOP
     if (creatingChatRef.current) return;
 
     creatingChatRef.current = true;
-
-    // 🔒 disable pointer immediately
-    if (newChatBtnRef.current) {
-      newChatBtnRef.current.style.pointerEvents = "none";
-    }
-
     setCreatingChat(true);
 
     try {
@@ -131,88 +87,97 @@ function Chat() {
       });
 
       const newSession = await res.json();
-
       setSessions((prev) => [newSession, ...prev]);
       setActiveSessionId(newSession._id);
       setMessages([]);
       setSidebarOpen(false);
     } catch (err) {
-      console.error("Failed to create new chat", err);
+      console.error("Failed to create chat", err);
     } finally {
       creatingChatRef.current = false;
       setCreatingChat(false);
+    }
+  };
 
-      // 🔓 re-enable pointer after micro-delay
-      setTimeout(() => {
-        if (newChatBtnRef.current) {
-          newChatBtnRef.current.style.pointerEvents = "auto";
-        }
-      }, 300);
+  /* ---------------- DELETE CHAT ---------------- */
+  const handleDeleteSession = async (sessionId) => {
+    if (!window.confirm("Delete this chat?")) return;
+
+    try {
+      await fetch(`http://localhost:8080/api/chat/session/${sessionId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setSessions((prev) => prev.filter((s) => s._id !== sessionId));
+
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(null);
+        setMessages([]);
+      }
+    } catch (err) {
+      console.error("Failed to delete chat", err);
     }
   };
 
   /* ---------------- SEND MESSAGE ---------------- */
-const sendMessage = async () => {
-  if (!input.trim() || loading) return;
-  if (!activeSessionId) return;
+  const sendMessage = async () => {
+    if (!input.trim() || loading || !activeSessionId) return;
 
-  const isFirstMessage = messages.length === 0;
-  const userMessage = input;
+    const userMessage = input;
+    const isFirstMessage = messages.length === 0;
 
-  setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
-  setInput("");
-  setLoading(true);
+    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
+    setInput("");
+    setLoading(true);
 
-  try {
-    // 🔹 rename chat if first message
-    if (isFirstMessage) {
-      await fetch(
-        `http://localhost:8080/api/chat/session/${activeSessionId}/title`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            title: userMessage.slice(0, 30), // short & clean
-          }),
-        }
-      );
+    try {
+      if (isFirstMessage) {
+        await fetch(
+          `http://localhost:8080/api/chat/session/${activeSessionId}/title`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              title: userMessage.slice(0, 30),
+            }),
+          }
+        );
 
-      // update sidebar title instantly
-      setSessions((prev) =>
-        prev.map((s) =>
-          s._id === activeSessionId
-            ? { ...s, title: userMessage.slice(0, 30) }
-            : s
-        )
-      );
+        setSessions((prev) =>
+          prev.map((s) =>
+            s._id === activeSessionId
+              ? { ...s, title: userMessage.slice(0, 30) }
+              : s
+          )
+        );
+      }
+
+      const res = await fetch("http://localhost:8080/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          sessionId: activeSessionId,
+        }),
+      });
+
+      const data = await res.json();
+      setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-
-    // send message to backend
-    const res = await fetch("http://localhost:8080/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
-        message: userMessage,
-        sessionId: activeSessionId,
-      }),
-    });
-
-    const data = await res.json();
-
-    setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   /* ---------------- UI ---------------- */
   return (
@@ -232,14 +197,26 @@ const sendMessage = async () => {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:static md:translate-x-0 md:w-[30%] lg:w-[25%]`}
       >
-        <h2 className="font-semibold mb-3">Chat History</h2>
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between mb-4 md:hidden">
+          <h2 className="font-semibold text-lg">Chat History</h2>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="text-2xl font-bold"
+          >
+            ✖
+          </button>
+        </div>
+
+        {/* Desktop Title */}
+        <h2 className="font-semibold mb-3 hidden md:block">Chat History</h2>
 
         <button
           ref={newChatBtnRef}
           onClick={handleNewChat}
           disabled={creatingChat}
           className="w-full bg-indigo-600 text-white py-2 rounded mb-4
-             disabled:opacity-50 disabled:cursor-not-allowed" 
+          disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {creatingChat ? "Creating..." : "+ New Chat"}
         </button>
@@ -247,16 +224,15 @@ const sendMessage = async () => {
         {sessions.map((session) => (
           <div
             key={session._id}
-            className={`flex items-center justify-between p-2 mb-2 rounded text-sm
-      ${
-        activeSessionId === session._id
-          ? "bg-indigo-600 text-white"
-          : "bg-white hover:bg-gray-200"
-      }`}
+            className={`group flex items-center justify-between p-2 mb-2 rounded text-sm
+              ${
+                activeSessionId === session._id
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white hover:bg-gray-200"
+              }`}
           >
-            {/* Chat title */}
             <div
-              className="flex-1 cursor-pointer"
+              className="flex-1 truncate cursor-pointer"
               onClick={() => {
                 setActiveSessionId(session._id);
                 setSidebarOpen(false);
@@ -265,11 +241,13 @@ const sendMessage = async () => {
               {session.title}
             </div>
 
-            {/* Delete button */}
             <button
-              onClick={() => handleDeleteSession(session._id)}
-              className="ml-2 text-red-500 hover:text-red-700"
-              title="Delete chat"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteSession(session._id);
+              }}
+              className="ml-2 opacity-0 group-hover:opacity-100 transition
+              text-red-500 hover:text-red-700"
             >
               🗑️
             </button>
@@ -300,11 +278,11 @@ const sendMessage = async () => {
             >
               <div
                 className={`px-4 py-2 rounded-lg max-w-[70%]
-                ${
-                  msg.role === "user"
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-200 text-black"
-                }`}
+                  ${
+                    msg.role === "user"
+                      ? "bg-indigo-500 text-white"
+                      : "bg-gray-200 text-black"
+                  }`}
               >
                 {msg.text}
               </div>

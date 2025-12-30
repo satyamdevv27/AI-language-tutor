@@ -5,6 +5,7 @@ import Home from "./pages/dashboard.jsx";
 import PrivateRoute from "./pages/protectedRoute.jsx";
 import Reset from "./pages/reset.jsx";
 import Chat from "./pages/chat.jsx";
+import VoiceLearning from "./pages/voicelearnuing.jsx";
 function App() {
   return (
     <div className="App">
@@ -29,7 +30,18 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route
+        path="/voicelearn"
+        element={
+          <PrivateRoute>
+            <VoiceLearning />
+          </PrivateRoute>
+        }
+      ></Route>
       </Routes>
+
+      
     </div>
   );
 }
