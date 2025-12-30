@@ -44,6 +44,18 @@ router.post("/", authMiddleware, async (req, res) => {
       });
     }
 
+    // 🔍 check if first user message
+    const firstMessage = await Chat.findOne({
+      sessionId,
+      role: "user",
+    });
+
+    if (!firstMessage) {
+      await ChatSession.findByIdAndUpdate(sessionId, {
+        title: message.slice(0, 30),
+      });
+    }
+
     // save user message
     await Chat.create({
       userId: req.user.userId,
@@ -68,6 +80,7 @@ router.post("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "AI service failed" });
   }
 });
+
 
 /* ---------------- GET MESSAGES FOR A SESSION ---------------- */
 router.get("/history/:sessionId", authMiddleware, async (req, res) => {
