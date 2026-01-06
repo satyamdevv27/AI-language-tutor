@@ -5,7 +5,10 @@ dotenv.config();
 
 import authRoutes from "./routes/authroutes.js";
 import chatRoutes from "./routes/chatroutes.js";
-import voiceRoutes from "./routes/voiceroute.js";
+import voiceRoutes from "./routes/voiceroutes.js";
+import scenarioRoutes from "./routes/scenarioroutes.js";
+import debateRoutes from "./routes/debateroutes.js";
+import profileRoutes from "./routes/profileRoutes.js"
 import "./models/db.js";
 
 const app = express();
@@ -17,7 +20,14 @@ app.use(cors());
 
 app.use("/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api", voiceRoutes);
+// app.use("/api", voiceRoutes);
+app.use("/api/voice", voiceRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/scenario", scenarioRoutes);
+
+
+app.use("/api/debate", debateRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

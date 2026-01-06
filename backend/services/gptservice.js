@@ -1,9 +1,7 @@
-import OpenAI from "openai";
-import dotenv from "dotenv";
-dotenv.config();
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
+
+import openai from "./gptclient.js";
+
 
 export const getGPTResponse = async (userMessage) => {
   const response = await openai.chat.completions.create({

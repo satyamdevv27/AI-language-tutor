@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 const Home = () => {
   /* ---------------- AUTH ---------------- */
   const user = JSON.parse(localStorage.getItem("user"));
-  const isLoggedIn = Boolean(user);
+  const token = localStorage.getItem("token");
+  const isLoggedIn = Boolean(user && token);
 
   /* ---------------- DARK MODE ---------------- */
   const [darkMode, setDarkMode] = useState(() => {
@@ -27,9 +28,7 @@ const Home = () => {
       <header className="border-b bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
-          <div className="text-2xl font-bold">
-            AI Language Tutor
-          </div>
+          <div className="text-2xl font-bold">AI Language Tutor</div>
 
           {/* Right controls */}
           <div className="flex items-center gap-3">
@@ -75,71 +74,78 @@ const Home = () => {
           !isLoggedIn ? "flex flex-col justify-center" : ""
         }`}
       >
-        {/* Hero text */}
+        {/* Hero */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Learn English with AI
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Practice real conversations, improve speaking skills, and learn
-            confidently with AI-powered guidance.
+            Practice conversations, improve speaking, and learn confidently with
+            AI-powered guidance.
           </p>
         </div>
 
         {/* Feature Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Conversational Learning */}
+          {/* Conversational */}
           <Link
             to={isLoggedIn ? "/chat" : "/login"}
-            className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 hover:shadow-lg transition"
+            className="bg-white dark:bg-gray-800
+    text-gray-800 dark:text-gray-100
+    transition-colors duration-300 border dark:border-gray-700 rounded-xl p-6 hover:shadow-lg "
           >
-            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center text-gray-500">
+            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center">
               Feature Image
             </div>
             <h3 className="text-lg font-semibold text-center">
-              Conversational Learning
+              Chat with AI
             </h3>
           </Link>
 
-          {/* Voice Based Learning */}
+          {/* Voice */}
           <Link
-            to={isLoggedIn ? "/voice" : "/login"}
+            to={isLoggedIn ? "/voicelearn" : "/login"}
             className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 hover:shadow-lg transition"
           >
-            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center text-gray-500">
+            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center">
               Feature Image
             </div>
             <h3 className="text-lg font-semibold text-center">
-              Voice Based Learning
+              Grammar and vocabulary support
             </h3>
           </Link>
 
-          {/* Grammar & Vocabulary */}
-          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 opacity-60 cursor-not-allowed">
-            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center text-gray-500">
-              Coming Soon
+         
+          <Link
+            to={isLoggedIn ? "/debate" : "/login"}
+            className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 hover:shadow-lg transition"
+          >
+            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center">
+              coming soon
             </div>
             <h3 className="text-lg font-semibold text-center">
-              Grammar & Vocabulary
+              Debate mode
             </h3>
-          </div>
+          </Link>
 
-          {/* Scenario Practice */}
-          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 opacity-60 cursor-not-allowed">
-            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center text-gray-500">
-              Coming Soon
+          <Link
+            to={isLoggedIn ? "/secnarioroom" : "/login"}
+            className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl p-6 hover:shadow-lg transition"
+          >
+            <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6 flex items-center justify-center">
+              coming soon
             </div>
             <h3 className="text-lg font-semibold text-center">
-              Scenario Based Practice
+              Scenario Practice
             </h3>
-          </div>
+          </Link>
         </div>
       </main>
 
       {/* ================= FOOTER ================= */}
       <footer className="border-t bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-          © {new Date().getFullYear()} AI Language Tutor. Built with ❤️
+          © {new Date().getFullYear()} AI Language Tutor
         </div>
       </footer>
     </div>
