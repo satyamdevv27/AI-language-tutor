@@ -2,6 +2,7 @@ import express from "express";
 import authMiddleware from "../middleware/auth.js";
 import Chat from "../models/chat.js";
 import ChatSession from "../models/catatsession.js";
+import User from "../models/user.js"; // 👈 ADD THIS
 import { getGPTResponse } from "../services/gptservice.js";
 
 const router = express.Router();
@@ -44,15 +45,21 @@ router.post("/", authMiddleware, async (req, res) => {
       });
     }
 
-    // 🔍 check if first user message
+    // 🔍 Check if this is first user message of this session
     const firstMessage = await Chat.findOne({
       sessionId,
       role: "user",
     });
 
+    // 🧠 If first message → rename chat + increment progress
     if (!firstMessage) {
       await ChatSession.findByIdAndUpdate(sessionId, {
         title: message.slice(0, 30),
+      });
+
+      // ✅ INCREMENT CHAT COUNT
+      await User.findByIdAndUpdate(req.user.userId, {
+        $inc: { "progress.chats": 1 },
       });
     }
 
@@ -64,6 +71,7 @@ router.post("/", authMiddleware, async (req, res) => {
       text: message,
     });
 
+    // get AI reply
     const aiReply = await getGPTResponse(message);
 
     // save AI reply
@@ -76,11 +84,10 @@ router.post("/", authMiddleware, async (req, res) => {
 
     res.json({ reply: aiReply });
   } catch (error) {
-    console.error(error);
+    console.error("Chat error:", error);
     res.status(500).json({ message: "AI service failed" });
   }
 });
-
 
 /* ---------------- GET MESSAGES FOR A SESSION ---------------- */
 router.get("/history/:sessionId", authMiddleware, async (req, res) => {
@@ -101,13 +108,11 @@ router.delete("/session/:sessionId", authMiddleware, async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    // 1️⃣ delete all messages of this session
     await Chat.deleteMany({
       sessionId,
       userId: req.user.userId,
     });
 
-    // 2️⃣ delete the session itself
     await ChatSession.findOneAndDelete({
       _id: sessionId,
       userId: req.user.userId,
@@ -129,14 +134,12 @@ router.patch("/session/:sessionId/title", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Title is required" });
     }
 
-    const session = await chatsession.findOneAndUpdate(
+    const session = await ChatSession.findOneAndUpdate(
       {
         _id: req.params.sessionId,
         userId: req.user.userId,
       },
-      {
-        title,
-      },
+      { title },
       { new: true }
     );
 
@@ -145,6 +148,5 @@ router.patch("/session/:sessionId/title", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to update title" });
   }
 });
-
 
 export default router;

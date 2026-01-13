@@ -1,7 +1,5 @@
 import User from "../models/user.js";
-import VoiceLearning from "../models/voicelearning.js";
-// import Debate from "../models/"; // if exists
-// import Scenario from "../models/scenario.js"; // if exists
+import { calculateLearningScore, getRank } from "../utils/progressUtils.js";
 
 export const getProfile = async (req, res) => {
   try {
@@ -9,17 +7,41 @@ export const getProfile = async (req, res) => {
 
     const user = await User.findById(userId).select("-password");
 
-    const voiceCount = await VoiceLearning.countDocuments({ userId });
-    const debateCount = await Debate.countDocuments({ userId });
-    const scenarioCount = await Scenario.countDocuments({ userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+     console.log(user.progress);
+
+
+    // calculate rank & score
+    const score = calculateLearningScore(user.progress);
+    const rank = getRank(score);
+
+    // save latest rank
+    user.learningScore = score;
+    user.rank = rank;
+    await user.save();
 
     res.json({
-      user,
-      progress: {
-        voice: voiceCount,
-        debate: debateCount,
-        scenario: scenarioCount,
-      },
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      bio: user.bio,
+
+      rank,
+      learningScore: score,
+
+      progress: user.progress,
+   
+
+      chartData: [
+        { name: "Chats", value: user.progress.chats },
+        { name: "Debates", value: user.progress.debates },
+        { name: "Scenarios", value: user.progress.scenarios },
+       
+      ],
+      
+
     });
   } catch (err) {
     res.status(500).json({ message: "Failed to load profile" });
