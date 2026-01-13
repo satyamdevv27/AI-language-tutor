@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-
 import { useState } from "react";
 
 const Signup = () => {
@@ -13,7 +12,10 @@ const Signup = () => {
     e.preventDefault();
     setError("");
 
-    if (!name || !email || !password) {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase(); // 🧠 FIXED
+
+    if (!cleanName || !cleanEmail || !password) {
       setError("All fields are required");
       return;
     }
@@ -31,7 +33,11 @@ const Signup = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          password,
+        }),
       });
 
       const data = await res.json();
@@ -54,55 +60,68 @@ const Signup = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex justify-center items-center bg-indigo-500">
-      <div className="bg-white rounded-lg p-6 w-80">
-        <h2 className="font-[Lato] text-2xl font-bold text-center mb-4">
-          Sign Up
+    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white">
+
+      <div className="w-full max-w-md bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-8 shadow-xl">
+
+        <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+          Create Account
         </h2>
 
         {error && (
-          <p className="text-red-500 text-sm text-center mb-2">{error}</p>
+          <p className="text-red-500 text-sm text-center mb-3">{error}</p>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            className="border p-2"
-            type="text"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        <form onSubmit={handleSubmit} className="space-y-4">
 
-          <input
-            className="border p-2"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div>
+            <label className="text-sm mb-1 block">Name</label>
+            <input
+              className="w-full px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800 border border-black/10 dark:border-white/10 focus:ring-2 focus:ring-indigo-500 outline-none"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
 
-          <input
-            className="border p-2"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div>
+            <label className="text-sm mb-1 block">Email</label>
+            <input
+              className="w-full px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800 border border-black/10 dark:border-white/10 focus:ring-2 focus:ring-indigo-500 outline-none"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm mb-1 block">Password</label>
+            <input
+              className="w-full px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800 border border-black/10 dark:border-white/10 focus:ring-2 focus:ring-indigo-500 outline-none"
+              type="password"
+              placeholder="Minimum 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="bg-indigo-600 text-white py-2 rounded"
+            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition disabled:opacity-50"
           >
-            {loading ? "Signing up..." : "Sign Up"}
+            {loading ? "Creating account..." : "Sign Up"}
           </button>
 
-          <p>
+          <p className="text-center text-sm mt-3 text-gray-600 dark:text-zinc-400">
             Already have an account?{" "}
-            <Link to="/login" className="text-indigo-600 underline">
+            <Link to="/login" className="text-indigo-500 hover:underline">
               Login
             </Link>
           </p>
+
         </form>
       </div>
     </div>

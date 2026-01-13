@@ -14,7 +14,6 @@ function Chat() {
   const creatingChatRef = useRef(false);
   const newChatBtnRef = useRef(null);
 
-  /* ---------------- USER ---------------- */
   const loggedInUser = JSON.parse(localStorage.getItem("user"))?.name || "User";
 
   /* ---------------- FETCH SESSIONS ---------------- */
@@ -22,13 +21,9 @@ function Chat() {
     const fetchSessions = async () => {
       try {
         const res = await fetch("http://localhost:8080/api/chat/sessions", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-
         const data = await res.json();
-
         if (Array.isArray(data)) {
           setSessions(data);
           if (data.length > 0) setActiveSessionId(data[0]._id);
@@ -37,7 +32,6 @@ function Chat() {
         console.error("Failed to fetch sessions", err);
       }
     };
-
     fetchSessions();
   }, []);
 
@@ -49,20 +43,14 @@ function Chat() {
       try {
         const res = await fetch(
           `http://localhost:8080/api/chat/history/${activeSessionId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
-
         const data = await res.json();
         setMessages(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load messages", err);
       }
     };
-
     fetchMessages();
   }, [activeSessionId]);
 
@@ -74,18 +62,14 @@ function Chat() {
   /* ---------------- NEW CHAT ---------------- */
   const handleNewChat = async () => {
     if (creatingChatRef.current) return;
-
     creatingChatRef.current = true;
     setCreatingChat(true);
 
     try {
       const res = await fetch("http://localhost:8080/api/chat/session", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-
       const newSession = await res.json();
       setSessions((prev) => [newSession, ...prev]);
       setActiveSessionId(newSession._id);
@@ -102,17 +86,12 @@ function Chat() {
   /* ---------------- DELETE CHAT ---------------- */
   const handleDeleteSession = async (sessionId) => {
     if (!window.confirm("Delete this chat?")) return;
-
     try {
       await fetch(`http://localhost:8080/api/chat/session/${sessionId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-
       setSessions((prev) => prev.filter((s) => s._id !== sessionId));
-
       if (activeSessionId === sessionId) {
         setActiveSessionId(null);
         setMessages([]);
@@ -143,12 +122,9 @@ function Chat() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            body: JSON.stringify({
-              title: userMessage.slice(0, 30),
-            }),
+            body: JSON.stringify({ title: userMessage.slice(0, 30) }),
           }
         );
-
         setSessions((prev) =>
           prev.map((s) =>
             s._id === activeSessionId
@@ -181,42 +157,36 @@ function Chat() {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="h-screen w-screen flex">
+    <div className="h-screen w-screen flex bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white">
+
       {/* OVERLAY */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* SIDEBAR */}
       <div
-        className={`fixed z-50 top-0 left-0 h-full w-[75%] bg-gray-100 p-3
+        className={`fixed z-50 top-0 left-0 h-full w-[75%]
+        bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border-r border-black/10 dark:border-white/10 p-4
         transform transition-transform duration-300
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:static md:translate-x-0 md:w-[30%] lg:w-[25%]`}
       >
-        {/* Mobile Header */}
         <div className="flex items-center justify-between mb-4 md:hidden">
           <h2 className="font-semibold text-lg">Chat History</h2>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="text-2xl font-bold"
-          >
-            ✖
-          </button>
+          <button onClick={() => setSidebarOpen(false)} className="text-2xl">✖</button>
         </div>
 
-        {/* Desktop Title */}
         <h2 className="font-semibold mb-3 hidden md:block">Chat History</h2>
 
         <button
           ref={newChatBtnRef}
           onClick={handleNewChat}
           disabled={creatingChat}
-          className="w-full bg-indigo-600 text-white py-2 rounded mb-4
-          disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl mb-4 disabled:opacity-50"
         >
           {creatingChat ? "Creating..." : "+ New Chat"}
         </button>
@@ -224,15 +194,15 @@ function Chat() {
         {sessions.map((session) => (
           <div
             key={session._id}
-            className={`group flex items-center justify-between p-2 mb-2 rounded text-sm
+            className={`group flex items-center justify-between p-3 mb-2 rounded-xl text-sm cursor-pointer
               ${
                 activeSessionId === session._id
                   ? "bg-indigo-600 text-white"
-                  : "bg-white hover:bg-gray-200"
+                  : "bg-white/80 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-zinc-700"
               }`}
           >
             <div
-              className="flex-1 truncate cursor-pointer"
+              className="flex-1 truncate"
               onClick={() => {
                 setActiveSessionId(session._id);
                 setSidebarOpen(false);
@@ -246,8 +216,7 @@ function Chat() {
                 e.stopPropagation();
                 handleDeleteSession(session._id);
               }}
-              className="ml-2 opacity-0 group-hover:opacity-100 transition
-              text-red-500 hover:text-red-700"
+              className="ml-2 opacity-0 group-hover:opacity-100 text-red-500"
             >
               🗑️
             </button>
@@ -257,18 +226,14 @@ function Chat() {
 
       {/* CHAT AREA */}
       <div className="w-full md:w-[70%] lg:w-[75%] flex flex-col">
-        <div className="h-14 border-b flex items-center justify-between px-4 font-semibold">
-          <button
-            className="md:hidden text-2xl"
-            onClick={() => setSidebarOpen(true)}
-          >
-            ☰
-          </button>
+
+        <div className="h-14 flex items-center justify-between px-4 border-b border-black/10 dark:border-white/10 backdrop-blur-xl bg-white/60 dark:bg-black/40 font-semibold">
+          <button className="md:hidden text-2xl" onClick={() => setSidebarOpen(true)}>☰</button>
           <span>Welcome {loggedInUser}</span>
           <div className="w-6 md:hidden" />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 bg-white">
+        <div className="flex-1 overflow-y-auto p-4">
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -277,26 +242,30 @@ function Chat() {
               }`}
             >
               <div
-                className={`px-4 py-2 rounded-lg max-w-[70%]
-                  ${
-                    msg.role === "user"
-                      ? "bg-indigo-500 text-white"
-                      : "bg-gray-200 text-black"
-                  }`}
+                className={`px-4 py-2 rounded-xl max-w-[70%]
+                ${
+                  msg.role === "user"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white/80 dark:bg-zinc-800"
+                }`}
               >
                 {msg.text}
               </div>
             </div>
           ))}
+
           {loading && (
-            <p className="text-sm text-gray-400 italic">🤖 AI is typing...</p>
+            <p className="text-sm text-gray-500 dark:text-zinc-400 italic">
+              🤖 AI is typing...
+            </p>
           )}
+
           <div ref={chatEndRef} />
         </div>
 
-        <div className="h-16 border-t flex items-center gap-3 px-4 bg-gray-50">
+        <div className="h-16 border-t border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl flex items-center gap-3 px-4">
           <input
-            className="flex-1 h-10 border rounded px-3"
+            className="flex-1 h-10 rounded-xl px-3 bg-white/80 dark:bg-zinc-800 border border-black/10 dark:border-white/10"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
@@ -306,7 +275,7 @@ function Chat() {
           <button
             onClick={sendMessage}
             disabled={loading}
-            className="h-10 px-4 bg-indigo-600 text-white rounded"
+            className="h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white"
           >
             Send
           </button>

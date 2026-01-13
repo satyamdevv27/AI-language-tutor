@@ -1,4 +1,3 @@
-import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -8,96 +7,105 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handlelogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    setError("");
+
+    const cleanEmail = email.trim().toLowerCase(); // 🧠 FIXED
+
+    if (!cleanEmail || !password) {
       setError("All fields are required");
       return;
     }
+
     try {
       setLoading(true);
+
       const res = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: cleanEmail,
+          password,
+        }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
-        setError(data.message);
+        setError(data.message || "Invalid credentials");
         return;
       }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("loggedinuser", data.user.name);
-      alert("Login successful");
-      Navigate("/home");
+
+      navigate("/home");
       setEmail("");
       setPassword("");
     } catch (err) {
-      console.log(err);
-      setError("server error");
+      setError("Server error. Try again.",err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="h-screen w-screen flex justify-center items-center bg-indigo-500 ">
-      <div className="border-2 border-indigo-500 bg-white rounded-lg ">
-        <h2 className="font-[Lato] text-2xl font-bold pt-2 ml-15">login</h2>
-        <form
-          action=""
-          onSubmit={handlelogin}
-          className="flex flex-col justify-center items-center   pt-13 pb-15 pl-15 pr-15 gap-3"
-        >
-          <div className="flex flex-col">
-            <label htmlFor="email" className=" mr-2.5">
-              Email
-            </label>
+    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white">
+
+      <div className="w-full max-w-md bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-8 shadow-xl">
+
+        <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+          Welcome Back
+        </h2>
+
+        <form onSubmit={handlelogin} className="space-y-4">
+
+          <div>
+            <label className="text-sm mb-1 block">Email</label>
             <input
-              type="text"
-              name="email"
+              type="email"
               placeholder="Enter your email"
-              className=" border-2 border-black"
-              onChange={(e) => {
-                setEmail(e.target.value);
-              }}
+              className="w-full px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800 border border-black/10 dark:border-white/10 focus:ring-2 focus:ring-indigo-500 outline-none"
               value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          <div className="flex flex-col">
-            <label htmlFor="password" className=" mr-2.5">
-              Password
-            </label>
+
+          <div>
+            <label className="text-sm mb-1 block">Password</label>
             <input
-              className=" border-2 border-black"
               type="password"
-              name="password"
               placeholder="Enter your password"
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
+              className="w-full px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800 border border-black/10 dark:border-white/10 focus:ring-2 focus:ring-indigo-500 outline-none"
               value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <p>{error}</p>
+
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 border w-25 cursor-pointer "
+            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition disabled:opacity-50"
           >
-            login
+            {loading ? "Logging in..." : "Login"}
           </button>
-          <p>
-            forget password {""}
-            <Link to={"/reset"} className="text-indigo-600 underline">
-              reset
+
+          <p className="text-center text-sm mt-3 text-gray-600 dark:text-zinc-400">
+            Forgot password?{" "}
+            <Link to="/reset" className="text-indigo-500 hover:underline">
+              Reset
             </Link>
           </p>
+
         </form>
       </div>
     </div>

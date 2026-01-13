@@ -17,13 +17,14 @@ function DebateRoom() {
   const recognitionRef = useRef(null);
   const endRef = useRef(null);
   const hasSpokenRef = useRef(false);
+  const startedRef = useRef(false);
 
   const MAX_ROUNDS = 4;
 
   const isSpeechSupported =
     "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
 
-  /* 🛑 STOP SPEECH WHEN LEAVING PAGE */
+  /* ---------------- STOP VOICE WHEN LEAVING ---------------- */
   useEffect(() => {
     return () => {
       if ("speechSynthesis" in window) {
@@ -37,21 +38,17 @@ function DebateRoom() {
     if (!("speechSynthesis" in window)) return;
 
     const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
-      }
+      const v = window.speechSynthesis.getVoices();
+      if (v.length > 0) setVoices(v);
     };
 
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
 
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
+    return () => (window.speechSynthesis.onvoiceschanged = null);
   }, []);
 
-  /* ---------------- AI SPEAK ---------------- */
+  /* ---------------- SPEAK AI ---------------- */
   const speakAI = (text) => {
     if (!("speechSynthesis" in window) || voices.length === 0) return;
 
@@ -61,9 +58,7 @@ function DebateRoom() {
     utterance.lang = "en-US";
 
     const maleVoice = voices.find(
-      (v) =>
-        v.lang.startsWith("en") &&
-        /david|mark|alex|fred|male|man/i.test(v.name)
+      (v) => v.lang.startsWith("en") && /david|mark|alex|fred|male|man/i.test(v.name)
     );
 
     if (maleVoice) utterance.voice = maleVoice;
@@ -74,24 +69,21 @@ function DebateRoom() {
     window.speechSynthesis.speak(utterance);
   };
 
-  /* 🔊 SPEAK AI MESSAGE ONLY ONCE (FIXES REFRESH BUG) */
+  /* Speak whenever AI message changes */
   useEffect(() => {
-    if (!aiMessage) return;
-    if (voices.length === 0) return;
-    if (hasSpokenRef.current) return;
-
+    if (!aiMessage || voices.length === 0 || hasSpokenRef.current) return;
     speakAI(aiMessage);
     hasSpokenRef.current = true;
   }, [aiMessage, voices]);
 
-  /* ---------------- START DEBATE ---------------- */
+  /* ---------------- START DEBATE (ONLY ONCE) ---------------- */
   useEffect(() => {
-    if (!topic) return;
+    if (!topic || startedRef.current) return;
+    startedRef.current = true;
+    hasSpokenRef.current = false;
 
     const startDebate = async () => {
       setLoading(true);
-      hasSpokenRef.current = false;
-
       try {
         const res = await fetch("http://localhost:8080/api/debate", {
           method: "POST",
@@ -99,10 +91,7 @@ function DebateRoom() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify({
-            topic,
-            message: "Start the debate.",
-          }),
+          body: JSON.stringify({ topic, message: "Start the debate." }),
         });
 
         const data = await res.json();
@@ -157,10 +146,7 @@ function DebateRoom() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({
-          topic,
-          message: userInput,
-        }),
+        body: JSON.stringify({ topic, message: userInput }),
       });
 
       const data = await res.json();
@@ -168,9 +154,7 @@ function DebateRoom() {
       setUserInput("");
 
       setRound((prev) => {
-        if (prev + 1 >= MAX_ROUNDS) {
-          setDebateEnded(true);
-        }
+        if (prev + 1 >= MAX_ROUNDS) setDebateEnded(true);
         return prev + 1;
       });
     } catch (err) {
@@ -182,78 +166,57 @@ function DebateRoom() {
 
   /* ---------------- END DEBATE ---------------- */
   const endDebate = () => {
-    const finalMessage =
-      "Thank you for the debate. You presented your arguments confidently. Would you like feedback or start a new topic?";
-
     hasSpokenRef.current = false;
-    setAiMessage(finalMessage);
+    setAiMessage(
+      "Thank you for the debate. You presented your arguments confidently. Would you like feedback or start a new topic?"
+    );
     setDebateEnded(true);
   };
 
-  /* 🔽 AUTO SCROLL ONLY WHEN DEBATE ENDS */
+  /* Auto scroll to thank you */
   useEffect(() => {
     if (debateEnded && endRef.current) {
-      endRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      endRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [debateEnded]);
 
-  if (!topic) {
-    return <p className="p-6">No debate topic selected.</p>;
-  }
+  if (!topic) return <p className="p-6">No debate topic selected.</p>;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* HEADER */}
+    <div className="min-h-screen flex flex-col bg-gray-100">
+
       <div className="bg-white border-b p-4 font-semibold">
         Debate Topic: {topic}
       </div>
 
-      {/* MAIN */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
-        {/* AI SPEECH BUBBLE */}
-        <div
-          ref={debateEnded ? endRef : null}
-          className="relative max-w-xl mb-4"
-        >
+      <div className="flex-1 flex items-center justify-center p-6 gap-10">
+
+        <div className="flex flex-col items-center">
+          <div
+            className={`w-40 h-40 rounded-full bg-indigo-100 flex items-center justify-center ${
+              isSpeaking ? "ring-4 ring-indigo-400 scale-105" : ""
+            }`}
+          >
+            <img src="/aidbtr.png" className="max-h-full" />
+          </div>
+          <p className="text-sm mt-2">AI Debater</p>
+          <p className="text-xs text-gray-500">
+            Round {round} / {MAX_ROUNDS}
+          </p>
+        </div>
+
+        <div ref={debateEnded ? endRef : null} className="max-w-xl">
           <div className="bg-white p-4 rounded-xl shadow max-h-[250px] overflow-y-auto">
             {loading ? "AI is thinking..." : aiMessage}
           </div>
-          <div className="absolute -bottom-3 left-10 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white" />
         </div>
-
-        {/* AVATAR */}
-        <div
-          className={`w-40 h-40 flex items-center justify-center rounded-full bg-indigo-100 transition-all ${
-            isSpeaking ? "scale-105 ring-4 ring-indigo-400" : ""
-          }`}
-        >
-          <img
-            src="/aidbtr.png"
-            alt="AI Debater"
-            className="max-h-full object-contain"
-          />
-        </div>
-
-        <p className="text-sm text-gray-500 mt-2">
-          AI Debater {isSpeaking && "(Speaking...)"}
-        </p>
-
-        <p className="text-xs text-gray-400 mt-1">
-          Round {round} / {MAX_ROUNDS}
-        </p>
       </div>
 
-      {/* CONTROLS */}
       <div className="bg-white border-t p-4">
         <button
           onClick={startListening}
           disabled={!isSpeechSupported || isListening || debateEnded}
-          className={`w-full py-2 rounded text-white ${
-            isListening ? "bg-red-600" : "bg-blue-600"
-          } disabled:opacity-50`}
+          className="w-full py-2 bg-indigo-600 text-white rounded"
         >
           {isListening ? "Listening..." : "Start Speaking"}
         </button>
@@ -261,7 +224,7 @@ function DebateRoom() {
         <button
           onClick={sendToAI}
           disabled={loading || debateEnded}
-          className="w-full mt-2 bg-green-600 text-white py-2 rounded disabled:opacity-50"
+          className="w-full mt-2 bg-green-600 text-white py-2 rounded"
         >
           Send
         </button>
@@ -269,15 +232,13 @@ function DebateRoom() {
         <button
           onClick={endDebate}
           disabled={debateEnded}
-          className="w-full mt-2 bg-gray-700 text-white py-2 rounded disabled:opacity-50"
+          className="w-full mt-2 bg-gray-700 text-white py-2 rounded"
         >
           End Debate
         </button>
 
         <textarea
-          className="mt-3 w-full border rounded p-2 text-sm"
-          rows={2}
-          placeholder="Your argument..."
+          className="mt-2 w-full border p-2"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           disabled={debateEnded}
