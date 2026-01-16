@@ -1,5 +1,4 @@
-// routes/authroutes.js
-// import OpenAI from "openai";
+
 import express from "express";
 import { signup } from "../controllers/authcontroller.js";
 import { login } from "../controllers/authcontroller.js";
@@ -12,5 +11,8 @@ router.post("/login",  loginvalidation, login);
 
 router.post("/signup", signupvalidation, signup);
 
+  
 
-export default router;
+        
+
+export default router;    
