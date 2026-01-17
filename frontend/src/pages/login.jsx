@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Login() {
@@ -10,11 +11,19 @@ function Login() {
 
   const navigate = useNavigate();
 
+  // ✅ AUTO REDIRECT IF LOGGED IN
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/home", { replace: true });
+    }
+  }, [navigate]);
+
   const handlelogin = async (e) => {
     e.preventDefault();
     setError("");
 
-    const cleanEmail = email.trim().toLowerCase(); // 🧠 FIXED
+    const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail || !password) {
       setError("All fields are required");
@@ -45,11 +54,12 @@ function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      navigate("/home");
+      navigate("/home", { replace: true });
       setEmail("");
       setPassword("");
     } catch (err) {
-      setError("Server error. Try again.",err);
+      console.error(err);
+      setError("Server error. Try again.");
     } finally {
       setLoading(false);
     }
@@ -57,7 +67,6 @@ function Login() {
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white">
-
       <div className="w-full max-w-md bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-8 shadow-xl">
 
         <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
@@ -65,7 +74,6 @@ function Login() {
         </h2>
 
         <form onSubmit={handlelogin} className="space-y-4">
-
           <div>
             <label className="text-sm mb-1 block">Email</label>
             <input
@@ -106,7 +114,6 @@ function Login() {
               Reset
             </Link>
           </p>
-
         </form>
       </div>
     </div>
