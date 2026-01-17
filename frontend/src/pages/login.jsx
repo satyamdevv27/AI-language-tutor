@@ -114,6 +114,13 @@ function Login() {
               Reset
             </Link>
           </p>
+          
+          <p className="text-center text-sm mt-3 text-gray-600 dark:text-zinc-400">
+            didn't have account{" "}
+            <Link to="/signup" className="text-indigo-500 hover:underline">
+              signup
+            </Link>
+          </p>
         </form>
       </div>
     </div>
