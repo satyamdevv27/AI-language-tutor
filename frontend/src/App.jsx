@@ -23,9 +23,9 @@ function App() {
         <Route
           path="/home"
           element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
+            <PrivateRoute>
+              <Home/>
+            </PrivateRoute>
           }
         />
         <Route path="/reset" element={<Reset />} />
