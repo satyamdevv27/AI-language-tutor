@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 import {
   BarChart,
   Bar,
@@ -13,9 +15,10 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 
-function UserProfile() {
+function Userprofile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfile();
@@ -23,14 +26,13 @@ function UserProfile() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/profile", {
+      const res = await fetch(`${API_URL}/api/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
       if (!res.ok) throw new Error("Failed");
-
       const data = await res.json();
       setProfile(data);
     } catch (err) {
@@ -43,20 +45,30 @@ function UserProfile() {
 
   if (loading)
     return (
-      <p className="p-6 text-gray-600 dark:text-zinc-400">Loading profile...</p>
+      <p className="p-6 text-gray-500 dark:text-zinc-400">
+        Loading profile...
+      </p>
     );
+
   if (!profile)
-    return (
-      <p className="p-6 text-red-500">Failed to load profile</p>
-    );
+    return <p className="p-6 text-red-500">Failed to load profile</p>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white p-6">
-
       <div className="max-w-5xl mx-auto">
 
-        {/* ================= PROFILE CARD ================= */}
-        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-6 text-center shadow-xl">
+        {/* PROFILE CARD */}
+        <div className="relative bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-6 text-center shadow-xl">
+
+          {/* ✅ TOP RIGHT EDIT BUTTON */}
+          <button
+            onClick={() => navigate("/profile/edit")}
+            className="absolute top-4 right-4 px-3 py-1.5 rounded-lg text-sm
+              bg-indigo-600 text-white hover:bg-indigo-500 transition"
+          >
+            Edit Profile
+          </button>
+
           <img
             src={profile.avatar || "/default-avatar.png"}
             alt="Avatar"
@@ -70,7 +82,6 @@ function UserProfile() {
             {profile.bio || "No bio added yet."}
           </p>
 
-          {/* Rank & Score */}
           <div className="mt-4">
             <span className="bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
               {profile.rank}
@@ -80,7 +91,6 @@ function UserProfile() {
             </p>
           </div>
 
-          {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-4 mt-6 text-sm">
             <div className="bg-white/60 dark:bg-zinc-800 rounded-xl p-3">
               <p className="font-bold text-lg">{profile.progress.chats}</p>
@@ -97,14 +107,10 @@ function UserProfile() {
           </div>
         </div>
 
-        {/* ================= CHARTS ================= */}
+        {/* CHARTS */}
         <div className="grid md:grid-cols-2 gap-6 mt-8">
-
-          {/* Bar Chart */}
           <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-4 shadow-xl">
-            <h3 className="text-lg font-semibold mb-3">
-              Activity Overview
-            </h3>
+            <h3 className="text-lg font-semibold mb-3">Activity Overview</h3>
             <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={profile.chartData}>
@@ -117,11 +123,8 @@ function UserProfile() {
             </div>
           </div>
 
-          {/* Radar Chart */}
           <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-2xl p-4 shadow-xl">
-            <h3 className="text-lg font-semibold mb-3">
-              Skill Balance
-            </h3>
+            <h3 className="text-lg font-semibold mb-3">Skill Balance</h3>
             <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={profile.chartData}>
@@ -138,11 +141,11 @@ function UserProfile() {
               </ResponsiveContainer>
             </div>
           </div>
-
         </div>
+
       </div>
     </div>
   );
 }
 
-export default UserProfile;
+export default Userprofile;

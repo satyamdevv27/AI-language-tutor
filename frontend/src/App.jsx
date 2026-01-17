@@ -11,7 +11,7 @@ import ScenarioRoom from "./pages/ScenarioRoom";
 import DebateStart from "./pages/debatestart.jsx";
 import DebateRoom from "./pages/DebateRoom";
 import Userprofile from "./pages/profile.jsx";
-
+import EditProfile from "./pages/EditProfile.jsx";
 
 function App() {
   return (
@@ -22,37 +22,8 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/home" element={<Home />} />
         <Route path="/reset" element={<Reset />} />
-        <Route path="/profile" element={<Userprofile/>} />
-        <Route path="/scenario/:scenarioId" element={<ScenarioRoom />} />
 
-        <Route path="/debate-room" element={<DebateRoom />} />
-
-        <Route
-          path="/chat"
-          element={
-            <PrivateRoute>
-              <Chat />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/voicelearn"
-          element={
-            <PrivateRoute>
-              <VoiceLearning />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/secnarioroom"
-          element={
-            <PrivateRoute>
-              <ScenarioSelect />
-            </PrivateRoute>
-          }
-        />
+        {/* PROFILE */}
         <Route
           path="/profile"
           element={
@@ -62,7 +33,56 @@ function App() {
           }
         />
 
-        <Route path="/debate" element={<DebateStart />} />
+        <Route
+          path="/profile/edit"
+          element={
+            <PrivateRoute>
+              <EditProfile />
+            </PrivateRoute>
+          }
+        />
+
+        {/* CHAT */}
+        <Route
+          path="/chat"
+          element={
+            <PrivateRoute>
+              <Chat />
+            </PrivateRoute>
+          }
+        />
+
+        {/* VOICE */}
+        <Route
+          path="/voicelearn"
+          element={
+            <PrivateRoute>
+              <VoiceLearning />
+            </PrivateRoute>
+          }
+        />
+
+        {/* SCENARIO */}
+        <Route
+          path="/secnarioroom"
+          element={
+            <PrivateRoute>
+              <ScenarioSelect />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/scenario/:scenarioId" element={<ScenarioRoom />} />
+
+        {/* DEBATE */}
+        <Route
+          path="/debate"
+          element={
+            <PrivateRoute>
+              <DebateStart />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/debate-room" element={<DebateRoom />} />
       </Routes>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function DebateRoom() {
   const { state } = useLocation();
@@ -85,7 +86,7 @@ function DebateRoom() {
     const startDebate = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8080/api/debate", {
+        const res = await fetch(`${API_URL}/api/debate`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -140,7 +141,7 @@ function DebateRoom() {
     hasSpokenRef.current = false;
 
     try {
-      const res = await fetch("http://localhost:8080/api/debate", {
+      const res = await fetch(`${API_URL}/api/debate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

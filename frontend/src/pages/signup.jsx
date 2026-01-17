@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -28,7 +29,7 @@ const Signup = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:8080/auth/signup", {
+      const res = await fetch(`${API_URL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

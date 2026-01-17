@@ -1,10 +1,10 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { scenarios } from "../data/scenario";
-
+const API_URL = import.meta.env.VITE_API_URL;
 function ScenarioRoom() {
   const { scenarioId } = useParams();
-  const scenario = scenarios[scenarioId];   // ✅ FIX
+  const scenario = scenarios[scenarioId];  
 
   const [aiMessage, setAiMessage] = useState("");
   const [userInput, setUserInput] = useState("");
@@ -23,11 +23,11 @@ function ScenarioRoom() {
   useEffect(() => {
     if (!("speechSynthesis" in window)) return;
 
-    const load = () => {
+    const load = () => {  
       const v = window.speechSynthesis.getVoices();
       if (v.length > 0) setVoices(v);
     };
-
+      
     load();
     window.speechSynthesis.onvoiceschanged = load;
     return () => (window.speechSynthesis.onvoiceschanged = null);
@@ -76,7 +76,7 @@ function ScenarioRoom() {
     const start = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8080/api/scenario", {
+        const res = await fetch(`${API_URL}/api/scenario`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -139,7 +139,7 @@ function ScenarioRoom() {
     hasSpokenRef.current = false;
 
     try {
-      const res = await fetch("http://localhost:8080/api/scenario", {
+      const res = await fetch(`${API_URL}/api/scenario`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

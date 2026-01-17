@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-
+const API_URL = import.meta.env.VITE_API_URL;
 function VoiceLearning() {
   /* ---------------- STATES ---------------- */
   const [isListening, setIsListening] = useState(false);
@@ -22,7 +22,7 @@ function VoiceLearning() {
 
   const fetchVoiceHistory = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/voice/history", {
+      const res = await fetch(`${API_URL}/api/voice/history`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -85,7 +85,7 @@ function VoiceLearning() {
     if (!transcript.trim() || loading) return;
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/api/voice", {
+      const res = await fetch(`${API_URL}/api/voice`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +107,7 @@ function VoiceLearning() {
   const deleteLearning = async (id) => {
     if (!window.confirm("Delete this learning record?")) return;
     try {
-      await fetch(`http://localhost:8080/api/voice/${id}`, {
+      await fetch(`${API_URL}/api/voice/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

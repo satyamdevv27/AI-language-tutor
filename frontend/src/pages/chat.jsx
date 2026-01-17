@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function Chat() {
   const [messages, setMessages] = useState([]);
@@ -20,7 +21,7 @@ function Chat() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/chat/sessions", {
+        const res = await fetch(`${API_URL}/api/chat/sessions`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data = await res.json();
@@ -42,7 +43,7 @@ function Chat() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/chat/history/${activeSessionId}`,
+          `${API_URL}/api/chat/history/${activeSessionId}`,
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
         const data = await res.json();
@@ -66,7 +67,7 @@ function Chat() {
     setCreatingChat(true);
 
     try {
-      const res = await fetch("http://localhost:8080/api/chat/session", {
+      const res = await fetch(`${API_URL}/api/chat/session`, {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -87,7 +88,7 @@ function Chat() {
   const handleDeleteSession = async (sessionId) => {
     if (!window.confirm("Delete this chat?")) return;
     try {
-      await fetch(`http://localhost:8080/api/chat/session/${sessionId}`, {
+      await fetch(`${API_URL}/api/chat/session/${sessionId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -115,7 +116,7 @@ function Chat() {
     try {
       if (isFirstMessage) {
         await fetch(
-          `http://localhost:8080/api/chat/session/${activeSessionId}/title`,
+          `${API_URL}/api/chat/session/${activeSessionId}/title`,
           {
             method: "PATCH",
             headers: {
@@ -134,7 +135,7 @@ function Chat() {
         );
       }
 
-      const res = await fetch("http://localhost:8080/api/chat", {
+      const res = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
