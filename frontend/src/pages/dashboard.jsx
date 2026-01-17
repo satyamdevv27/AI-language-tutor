@@ -31,7 +31,7 @@ const Home = () => {
           
           {/* Logo */}
           <div className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-            AI Language Tutor
+            AI Buddy
           </div>
 
           {/* Right controls */}
@@ -40,7 +40,7 @@ const Home = () => {
               onClick={() => setDarkMode((prev) => !prev)}
               className="px-4 py-2 rounded-full text-sm border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition"
             >
-              {darkMode ? "☀️ Light" : "🌙 Dark"}
+              {darkMode ? "☀️" : "🌙"}
             </button>
 
             {!isLoggedIn ? (
