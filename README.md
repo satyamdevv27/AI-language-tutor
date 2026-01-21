@@ -71,26 +71,20 @@ An AI-powered English learning platform built using the **MERN stack**, designed
 
 ---
 
-## 📂 Project Structure
-
-```
-
 ├── frontend
-│   ├── src
-│   │   ├── pages
-│   │   ├── components
-│   │   ├── data
-│   │   └── App.jsx
-│   └── main.jsx
+│ ├── src
+│ │ ├── pages # All main pages (Chat, Profile, Debate, Scenario, etc.)
+│ │ ├── components # Reusable UI components
+│ │ ├── data # Static data (scenarios, debate topics, etc.)
+│ │ ├── App.jsx
+│ │ └── main.jsx
 │
 ├── backend
-│   ├── controllers
-│   ├── routes
-│   ├── models
-│   ├── middleware
-│   └── server.js
-
-```
+│ ├── controllers # Request handlers / business logic
+│ ├── routes # API route definitions
+│ ├── models # MongoDB schemas
+│ ├── middleware # Auth & other middlewares
+│ └── server.js # Express server entry point
 
 ---
 
