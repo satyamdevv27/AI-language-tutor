@@ -14,7 +14,7 @@ export const getScenarioResponse = async (
     "You are a helpful conversational assistant.";
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "mistralai/mistral-7b-instruct",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage },

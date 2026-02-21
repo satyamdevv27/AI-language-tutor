@@ -6,7 +6,7 @@ const openai = new OpenAI({
 
 export const getDebateReply = async (topic, userMessage) => {
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "mistralai/mistral-7b-instruct",
     messages: [
       {
         role: "system",
