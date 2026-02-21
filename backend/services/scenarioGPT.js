@@ -44,6 +44,7 @@ export const getScenarioResponse = async (scenarioId, userMessage) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
       ],
+      temperature: 0.8,
       max_tokens: 120,
     });
 

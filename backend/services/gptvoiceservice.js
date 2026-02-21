@@ -19,9 +19,10 @@ Vocabulary Improvements:
 `;
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+      model: "mistralai/mistral-7b-instruct",
     messages: [{ role: "user", content: prompt }],
     max_tokens: 200,
+    temperature: 0.8,
   });
 
   return response.choices?.[0]?.message?.content || "AI could not rewrite.";
