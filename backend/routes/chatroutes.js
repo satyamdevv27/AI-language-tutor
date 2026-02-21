@@ -1,8 +1,9 @@
 import express from "express";
+import mongoose from "mongoose";
 import authMiddleware from "../middleware/auth.js";
 import Chat from "../models/chat.js";
-import ChatSession from "../models/catatsession.js";
-import User from "../models/user.js"; // 👈 ADD THIS
+import ChatSession from "../models/catatsession.js"; // ✅ fixed name
+import User from "../models/user.js";
 import { getGPTResponse } from "../services/gptservice.js";
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.post("/session", authMiddleware, async (req, res) => {
 
     res.status(201).json(session);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Failed to create session" });
   }
 });
@@ -30,6 +32,7 @@ router.get("/sessions", authMiddleware, async (req, res) => {
 
     res.json(sessions);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Failed to fetch sessions" });
   }
 });
@@ -45,25 +48,29 @@ router.post("/", authMiddleware, async (req, res) => {
       });
     }
 
-    // 🔍 Check if this is first user message of this session
+    // Validate session ID
+    if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
+
+    // Check if first message in session
     const firstMessage = await Chat.findOne({
       sessionId,
       role: "user",
     });
 
-    // 🧠 If first message → rename chat + increment progress
+    // Update title + increment progress
     if (!firstMessage) {
       await ChatSession.findByIdAndUpdate(sessionId, {
         title: message.slice(0, 30),
       });
 
-      // ✅ INCREMENT CHAT COUNT
       await User.findByIdAndUpdate(req.user.userId, {
         $inc: { "progress.chats": 1 },
       });
     }
 
-    // save user message
+    // Save user message
     await Chat.create({
       userId: req.user.userId,
       sessionId,
@@ -71,10 +78,16 @@ router.post("/", authMiddleware, async (req, res) => {
       text: message,
     });
 
-    // get AI reply
-    const aiReply = await getGPTResponse(message);
+    // Get AI reply safely
+    let aiReply;
+    try {
+      aiReply = await getGPTResponse(message);
+    } catch (err) {
+      console.error("GPT ERROR:", err);
+      aiReply = "Sorry, AI response failed.";
+    }
 
-    // save AI reply
+    // Save AI reply
     await Chat.create({
       userId: req.user.userId,
       sessionId,
@@ -85,20 +98,27 @@ router.post("/", authMiddleware, async (req, res) => {
     res.json({ reply: aiReply });
   } catch (error) {
     console.error("Chat error:", error);
-    res.status(500).json({ message: "AI service failed" });
+    res.status(500).json({ error: error.message });
   }
 });
 
-/* ---------------- GET MESSAGES FOR A SESSION ---------------- */
+/* ---------------- GET CHAT HISTORY ---------------- */
 router.get("/history/:sessionId", authMiddleware, async (req, res) => {
   try {
+    const { sessionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
+
     const messages = await Chat.find({
       userId: req.user.userId,
-      sessionId: req.params.sessionId,
+      sessionId,
     }).sort({ createdAt: 1 });
 
     res.json(messages);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Failed to fetch messages" });
   }
 });
@@ -107,6 +127,10 @@ router.get("/history/:sessionId", authMiddleware, async (req, res) => {
 router.delete("/session/:sessionId", authMiddleware, async (req, res) => {
   try {
     const { sessionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
 
     await Chat.deleteMany({
       sessionId,
@@ -126,27 +150,37 @@ router.delete("/session/:sessionId", authMiddleware, async (req, res) => {
 });
 
 /* ---------------- UPDATE SESSION TITLE ---------------- */
-router.patch("/session/:sessionId/title", authMiddleware, async (req, res) => {
-  try {
-    const { title } = req.body;
+router.patch(
+  "/session/:sessionId/title",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { title } = req.body;
+      const { sessionId } = req.params;
 
-    if (!title) {
-      return res.status(400).json({ message: "Title is required" });
+      if (!title) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+        return res.status(400).json({ message: "Invalid session ID" });
+      }
+
+      const session = await ChatSession.findOneAndUpdate(
+        {
+          _id: sessionId,
+          userId: req.user.userId,
+        },
+        { title },
+        { new: true }
+      );
+
+      res.json(session);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to update title" });
     }
-
-    const session = await ChatSession.findOneAndUpdate(
-      {
-        _id: req.params.sessionId,
-        userId: req.user.userId,
-      },
-      { title },
-      { new: true }
-    );
-
-    res.json(session);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to update title" });
   }
-});
+);
 
 export default router;
