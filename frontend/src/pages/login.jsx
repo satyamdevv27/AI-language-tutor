@@ -108,12 +108,7 @@ function Login() {
             {loading ? "Logging in..." : "Login"}
           </button>
 
-          <p className="text-center text-sm mt-3 text-gray-600 dark:text-zinc-400">
-            Forgot password?{" "}
-            <Link to="/reset" className="text-indigo-500 hover:underline">
-              Reset
-            </Link>
-          </p>
+
           
           <p className="text-center text-sm mt-3 text-gray-600 dark:text-zinc-400">
             didn't have account{" "}

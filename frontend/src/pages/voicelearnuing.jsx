@@ -10,7 +10,7 @@ function VoiceLearning() {
   const [history, setHistory] = useState([]);
   const [activeItem, setActiveItem] = useState(null);
 
-  // 🔥 Same as Chat.jsx
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const recognitionRef = useRef(null);

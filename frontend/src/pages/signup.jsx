@@ -14,7 +14,7 @@ const Signup = () => {
     setError("");
 
     const cleanName = name.trim();
-    const cleanEmail = email.trim().toLowerCase(); // 🧠 FIXED
+    const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanName || !cleanEmail || !password) {
       setError("All fields are required");
