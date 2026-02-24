@@ -53,54 +53,31 @@ import openai from "./gptclient.js";
 
 export const getGPTResponse = async (userMessage) => {
   try {
+    const prompt = `
+You are a friendly English language tutor.
+
+Talk naturally.
+If there is a grammar mistake:
+- Reply normally first.
+- Then correct it politely.
+- Explain briefly in simple English.
+Always continue the conversation.
+Keep under 120 words.
+
+Student message:
+"${userMessage}"
+`;
+
     const response = await openai.responses.create({
       model: "google/gemma-3-4b-it:free",
       temperature: 0.7,
       max_output_tokens: 180,
-      input: [
-        {
-          role: "system",
-          content: `
-You are a friendly AI language tutor having a conversation with a student.
-
-Your goals:
-1. Talk naturally like a real person.
-2. Continue the conversation instead of ending it.
-3. If the user makes a grammar mistake:
-   - First reply naturally.
-   - Then politely correct the mistake.
-   - Briefly explain the correction in simple words.
-4. If the user's message is correct, respond normally and ask a follow-up question.
-5. Keep responses simple and beginner-friendly.
-6. Do NOT behave like a grammar checker only.
-7. Do NOT read emojis aloud.
-8. Keep responses under 120 words.
-
-Always continue the conversation.
-`
-        },
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
+      input: prompt,
     });
 
-    const output =
-      response.output?.[0]?.content?.[0]?.text?.trim();
-
-    return output || "AI could not respond.";
+    return response.output?.[0]?.content?.[0]?.text?.trim() || "No response.";
   } catch (error) {
-    console.error("OpenRouter Error FULL:", error);
-
-    if (error.status === 429) {
-      return "AI is busy right now. Please try again in a moment.";
-    }
-
-    if (error.status === 401) {
-      return "Invalid API configuration.";
-    }
-
+    console.error("Tutor error:", error);
     return "AI is temporarily unavailable.";
   }
 };

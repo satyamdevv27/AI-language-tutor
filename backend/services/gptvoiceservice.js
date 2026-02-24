@@ -50,62 +50,34 @@ import openai from "./gptclient.js";
 
 export const rewriteSentence = async (text) => {
   try {
-    const response = await openai.responses.create({
-      model: "google/gemma-3-4b-it:free",
-      temperature: 0.6,
-      max_output_tokens: 180,
-      input: [
-        {
-          role: "system",
-          content: `
-You are a friendly English language tutor.
+    const prompt = `
+You are a friendly English tutor.
 
-Rules:
-- Speak clearly and simply.
-- Do NOT use asterisks, bullet points, or markdown.
-- Do NOT repeat the original incorrect sentence.
-- Keep explanations short and beginner-friendly.
-- Be encouraging and positive.
-`
-        },
-        {
-          role: "user",
-          content: `
-Here is the student's sentence:
+Rewrite the sentence correctly.
+Improve vocabulary slightly if needed.
+Explain the main correction simply.
+Do not use bullet points or symbols.
 
+Sentence:
 "${text}"
 
-Please:
-1. Rewrite it correctly.
-2. Improve vocabulary slightly if appropriate.
-3. Explain the main correction in simple English.
-
-Respond exactly in this format:
+Respond exactly like this:
 
 Corrected Sentence:
 Explanation:
 Vocabulary Improvements:
-`
-        }
-      ]
+`;
+
+    const response = await openai.responses.create({
+      model: "google/gemma-3-4b-it:free",
+      temperature: 0.6,
+      max_output_tokens: 180,
+      input: prompt,
     });
 
-    const output =
-      response.output?.[0]?.content?.[0]?.text?.trim();
-
-    return output || "AI could not rewrite.";
-
+    return response.output?.[0]?.content?.[0]?.text?.trim() || "No response.";
   } catch (error) {
-    console.error("Rewrite error FULL:", error);
-
-    if (error.status === 429) {
-      return "Rewrite service is busy. Please try again shortly.";
-    }
-
-    if (error.status === 401) {
-      return "Invalid API configuration.";
-    }
-
-    return "Rewrite service is temporarily unavailable.";
+    console.error("Rewrite error:", error);
+    return "Rewrite service unavailable.";
   }
 };

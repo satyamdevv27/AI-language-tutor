@@ -38,35 +38,29 @@ const openai = new OpenAI({
 
 export const getScenarioResponse = async (scenarioId, userMessage) => {
   try {
-    const systemPrompt =
+    const basePrompt =
       scenarioPrompts[scenarioId] ||
       "You are a helpful conversational assistant.";
+
+    const prompt = `
+${basePrompt}
+
+User message:
+"${userMessage}"
+
+Respond naturally and continue the conversation.
+`;
 
     const response = await openai.responses.create({
       model: "google/gemma-3-4b-it:free",
       temperature: 0.7,
       max_output_tokens: 150,
-      input: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
+      input: prompt,
     });
 
-    const output =
-      response.output?.[0]?.content?.[0]?.text?.trim();
-
-    return output || "No response.";
+    return response.output?.[0]?.content?.[0]?.text?.trim() || "No response.";
   } catch (error) {
-    console.error("Scenario AI error FULL:", error);
-
-    if (error.status === 429) {
-      return "AI is busy right now. Please try again shortly.";
-    }
-
-    if (error.status === 401) {
-      return "Invalid API configuration.";
-    }
-
-    return "Scenario mode is temporarily unavailable.";
+    console.error("Scenario error:", error);
+    return "Scenario mode unavailable.";
   }
 };

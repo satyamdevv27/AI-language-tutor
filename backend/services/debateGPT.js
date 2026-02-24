@@ -155,56 +155,37 @@ export const getDebateReply = async (topic, userMessage) => {
     const isFirstTurn =
       !userMessage ||
       userMessage.trim() === "" ||
-      userMessage.toLowerCase().includes("start the debate");
+      userMessage.toLowerCase().includes("start");
+
+    const prompt = `
+You are a skilled human debater in a live college debate.
+
+Rules:
+- Speak naturally.
+- Be persuasive but respectful.
+- Keep response under 80 words.
+- No bullet points.
+- End with one strong follow-up question.
+
+Debate topic: "${topic}"
+
+${
+  isFirstTurn
+    ? "Clearly state your position and begin the debate."
+    : `Opponent said: "${userMessage}". Give a strong counter-argument.`
+}
+`;
 
     const response = await openai.responses.create({
       model: "google/gemma-3-4b-it:free",
       temperature: 0.7,
       max_output_tokens: 200,
-      input: [
-        {
-          role: "system",
-          content: `
-You are a skilled human debater in a live college debate.
-
-Rules:
-- Speak naturally like a real person.
-- Be confident and persuasive.
-- Keep response under 80 words.
-- Give 1–2 strong arguments only.
-- No bullet points.
-- No markdown.
-- End with one sharp follow-up question.
-`,
-        },
-        {
-          role: "user",
-          content: isFirstTurn
-            ? `Debate topic: "${topic}". Clearly state your position and begin the debate.`
-            : `Debate topic: "${topic}"
-
-Opponent said: "${userMessage}"
-
-Give a strong counter-argument.`,
-        },
-      ],
+      input: prompt,
     });
 
-    const output =
-      response.output?.[0]?.content?.[0]?.text?.trim();
-
-    return output || "No response generated.";
+    return response.output?.[0]?.content?.[0]?.text?.trim() || "No response.";
   } catch (error) {
-    console.error("Debate AI error FULL:", error);
-
-    if (error.status === 429) {
-      return "AI is busy. Please try again in a few seconds.";
-    }
-
-    if (error.status === 401) {
-      return "Invalid API key configuration.";
-    }
-
+    console.error("Debate error:", error);
     return "Debate mode is temporarily unavailable.";
   }
 };
