@@ -88,53 +88,123 @@
 //   }
 // };
 
+// import OpenAI from "openai";
+
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY, // using OpenRouter key here
+//   baseURL: "https://openrouter.ai/api/v1",
+// });
+
+// export const getDebateReply = async (topic, userMessage) => {
+//   try {
+//     const isFirstTurn =
+//       !userMessage ||
+//       userMessage.toLowerCase().includes("start the debate");
+
+//     const response = await openai.chat.completions.create({
+//       model: "google/gemma-3-4b-it",
+//       temperature: 0.8,
+//       max_tokens: 300,
+//       messages: [
+//         {
+//           role: "system",
+//           content: `
+// You are a confident human debater in a live debate.
+
+// Speak naturally like a real person.
+// Be persuasive but respectful.
+// Keep replies under 80 words.
+// Make 1–2 strong arguments only.
+// Avoid bullet points or formatting symbols.
+// End with one sharp follow-up question.
+// `,
+//         },
+//         {
+//           role: "user",
+//           content: isFirstTurn
+//             ? `The debate topic is: "${topic}". Start the debate by clearly stating your position.`
+//             : `Debate topic: "${topic}"
+
+// Opponent argument: "${userMessage}"
+
+// Respond naturally with a counter-argument.`,
+//         },
+//       ],
+//     });
+
+//     return response.choices?.[0]?.message?.content || "No response.";
+//   } catch (error) {
+//     console.error("Debate AI error:", error);
+//     return "Debate mode is temporarily unavailable.";
+//   }
+// };
+
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // using OpenRouter key here
+  apiKey: process.env.OPENAI_API_KEY, // Use OpenRouter key
   baseURL: "https://openrouter.ai/api/v1",
+  defaultHeaders: {
+    "HTTP-Referer": "http://localhost:5173", // change to your frontend URL in production
+    "X-Title": "AI Debate Project",
+  },
 });
 
 export const getDebateReply = async (topic, userMessage) => {
   try {
     const isFirstTurn =
       !userMessage ||
+      userMessage.trim() === "" ||
       userMessage.toLowerCase().includes("start the debate");
 
-    const response = await openai.chat.completions.create({
-      model: "mistralai/mistral-7b-instruct",
-      temperature: 0.8,
-      max_tokens: 180,
-      messages: [
-        {
-          role: "system",
-          content: `
-You are a confident human debater in a live debate.
+    const messages = [
+      {
+        role: "system",
+        content: `
+You are a skilled human debater in a live college debate.
 
-Speak naturally like a real person.
-Be persuasive but respectful.
-Keep replies under 80 words.
-Make 1–2 strong arguments only.
-Avoid bullet points or formatting symbols.
-End with one sharp follow-up question.
+Rules:
+- Speak naturally like a real person.
+- Be confident and persuasive.
+- Keep response under 80 words.
+- Give 1–2 strong arguments only.
+- No bullet points.
+- No markdown.
+- End with one sharp follow-up question.
 `,
-        },
-        {
-          role: "user",
-          content: isFirstTurn
-            ? `The debate topic is: "${topic}". Start the debate by clearly stating your position.`
-            : `Debate topic: "${topic}"
+      },
+      {
+        role: "user",
+        content: isFirstTurn
+          ? `Debate topic: "${topic}". Clearly state your position and begin the debate.`
+          : `Debate topic: "${topic}"
 
-Opponent argument: "${userMessage}"
+Opponent said: "${userMessage}"
 
-Respond naturally with a counter-argument.`,
-        },
-      ],
+Give a strong counter-argument.`,
+      },
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "google/gemma-3-4b-it:free",
+      messages,
+      temperature: 0.7,
+      max_tokens: 200, // smaller = safer for free tier
     });
 
-    return response.choices?.[0]?.message?.content || "No response.";
+    return response.choices?.[0]?.message?.content?.trim() ||
+      "No response generated.";
   } catch (error) {
-    console.error("Debate AI error:", error);
+    console.error("Debate AI error:", error?.response?.data || error.message);
+
+    if (error.status === 429) {
+      return "AI is currently busy. Please try again in a few seconds.";
+    }
+
+    if (error.status === 402) {
+      return "AI service credits exhausted.";
+    }
+
     return "Debate mode is temporarily unavailable.";
   }
 };
