@@ -53,11 +53,11 @@ import openai from "./gptclient.js";
 
 export const getGPTResponse = async (userMessage) => {
   try {
-    const response = await openai.chat.completions.create({
-      model: "google/gemma-3-4b-it:free", // FREE model
+    const response = await openai.responses.create({
+      model: "google/gemma-3-4b-it:free",
       temperature: 0.7,
-      max_tokens: 180,
-      messages: [
+      max_output_tokens: 180,
+      input: [
         {
           role: "system",
           content: `
@@ -77,7 +77,7 @@ Your goals:
 8. Keep responses under 120 words.
 
 Always continue the conversation.
-`,
+`
         },
         {
           role: "user",
@@ -86,15 +86,19 @@ Always continue the conversation.
       ],
     });
 
-    return (
-      response.choices?.[0]?.message?.content?.trim() ||
-      "AI could not respond."
-    );
+    const output =
+      response.output?.[0]?.content?.[0]?.text?.trim();
+
+    return output || "AI could not respond.";
   } catch (error) {
-    console.error("OpenRouter Error:", error?.response?.data || error.message);
+    console.error("OpenRouter Error FULL:", error);
 
     if (error.status === 429) {
       return "AI is busy right now. Please try again in a moment.";
+    }
+
+    if (error.status === 401) {
+      return "Invalid API configuration.";
     }
 
     return "AI is temporarily unavailable.";

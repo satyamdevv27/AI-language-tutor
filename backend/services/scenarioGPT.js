@@ -31,7 +31,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
-    "HTTP-Referer": "http://localhost:5173",
+    "HTTP-Referer": "https://ai-language-tutor-backend-a8f7.onrender.com",
     "X-Title": "AI Scenario Chat Project",
   },
 });
@@ -42,28 +42,29 @@ export const getScenarioResponse = async (scenarioId, userMessage) => {
       scenarioPrompts[scenarioId] ||
       "You are a helpful conversational assistant.";
 
-    const response = await openai.chat.completions.create({
-      model: "google/gemma-3-4b-it:free", // FREE model
-      messages: [
+    const response = await openai.responses.create({
+      model: "google/gemma-3-4b-it:free",
+      temperature: 0.7,
+      max_output_tokens: 150,
+      input: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
       ],
-      temperature: 0.7,
-      max_tokens: 150,
     });
 
-    return (
-      response.choices?.[0]?.message?.content?.trim() ||
-      "No response."
-    );
+    const output =
+      response.output?.[0]?.content?.[0]?.text?.trim();
+
+    return output || "No response.";
   } catch (error) {
-    console.error(
-      "Scenario AI error:",
-      error?.response?.data || error.message
-    );
+    console.error("Scenario AI error FULL:", error);
 
     if (error.status === 429) {
       return "AI is busy right now. Please try again shortly.";
+    }
+
+    if (error.status === 401) {
+      return "Invalid API configuration.";
     }
 
     return "Scenario mode is temporarily unavailable.";

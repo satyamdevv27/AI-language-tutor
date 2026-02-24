@@ -50,11 +50,11 @@ import openai from "./gptclient.js";
 
 export const rewriteSentence = async (text) => {
   try {
-    const response = await openai.chat.completions.create({
-      model: "google/gemma-3-4b-it:free", // FREE model
+    const response = await openai.responses.create({
+      model: "google/gemma-3-4b-it:free",
       temperature: 0.6,
-      max_tokens: 180,
-      messages: [
+      max_output_tokens: 180,
+      input: [
         {
           role: "system",
           content: `
@@ -90,19 +90,20 @@ Vocabulary Improvements:
       ]
     });
 
-    return (
-      response.choices?.[0]?.message?.content?.trim() ||
-      "AI could not rewrite."
-    );
+    const output =
+      response.output?.[0]?.content?.[0]?.text?.trim();
+
+    return output || "AI could not rewrite.";
 
   } catch (error) {
-    console.error(
-      "Rewrite error:",
-      error?.response?.data || error.message
-    );
+    console.error("Rewrite error FULL:", error);
 
     if (error.status === 429) {
       return "Rewrite service is busy. Please try again shortly.";
+    }
+
+    if (error.status === 401) {
+      return "Invalid API configuration.";
     }
 
     return "Rewrite service is temporarily unavailable.";
