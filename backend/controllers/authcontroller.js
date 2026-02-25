@@ -49,19 +49,19 @@ export const login = async (req, res) => {
     const jwt_token = jwt.sign(
       { email: user.email, userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: "24h" },
     );
-    res
-      .status(200)
-      .json({ message: "Login successful", token : jwt_token, user:{
+    res.status(200).json({
+      message: "Login successful",
+      token: jwt_token,
+      user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      } });
+        email: user.email,
+      },
+    });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
