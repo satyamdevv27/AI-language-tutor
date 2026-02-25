@@ -15,8 +15,7 @@ function VoiceLearning() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const recognitionRef = useRef(null);
-  const loggedInUser =
-    JSON.parse(localStorage.getItem("user"))?.name || "User";
+  const loggedInUser = JSON.parse(localStorage.getItem("user"))?.name || "User";
 
   /* ---------------- PRELOAD VOICES ---------------- */
   useEffect(() => {
@@ -25,7 +24,7 @@ function VoiceLearning() {
     }
   }, []);
 
-  /* ---------------- COUNTDOWN TIMER ---------------- */
+  /* ---------------- COUNTDOWN TIMER (Same As Scenario) ---------------- */
   useEffect(() => {
     let interval;
 
@@ -33,16 +32,16 @@ function VoiceLearning() {
       setThinkingTime(5);
 
       interval = setInterval(() => {
-        setThinkingTime((prev) => {
-          if (prev > 1) return prev - 1;
-          return 0;
-        });
+        setThinkingTime((prev) => (prev > 1 ? prev - 1 : 0));
       }, 1000);
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [loading]);
 
+  /* ---------------- FETCH HISTORY ---------------- */
   useEffect(() => {
     fetchVoiceHistory();
   }, []);
@@ -100,10 +99,12 @@ function VoiceLearning() {
     setIsListening(false);
   };
 
-  /* ---------------- SPEECH SYNTHESIS FIXED ---------------- */
+  /* ---------------- SPEECH SYNTHESIS ---------------- */
 
   const removeEmojis = (text) =>
-    text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "").trim();
+    text
+      .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "")
+      .trim();
 
   const speakText = (text) => {
     if (!("speechSynthesis" in window) || !text) return;
@@ -177,7 +178,6 @@ function VoiceLearning() {
 
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white">
-
       {/* OVERLAY */}
       {sidebarOpen && (
         <div
@@ -195,7 +195,9 @@ function VoiceLearning() {
       >
         <div className="flex items-center justify-between mb-4 md:hidden">
           <h2 className="font-semibold">Voice History</h2>
-          <button onClick={() => setSidebarOpen(false)} className="text-xl">✖</button>
+          <button onClick={() => setSidebarOpen(false)} className="text-xl">
+            ✖
+          </button>
         </div>
 
         <h2 className="font-semibold mb-4 hidden md:block">Voice History</h2>
@@ -230,23 +232,34 @@ function VoiceLearning() {
 
       {/* MAIN */}
       <div className="flex-1 flex flex-col">
-
         {/* HEADER */}
         <div className="h-14 flex items-center justify-between px-6 border-b border-black/10 dark:border-white/10 backdrop-blur-xl bg-white/60 dark:bg-black/40 font-semibold">
-          <button className="md:hidden text-2xl" onClick={() => setSidebarOpen(true)}>☰</button>
+          <button
+            className="md:hidden text-2xl"
+            onClick={() => setSidebarOpen(true)}
+          >
+            ☰
+          </button>
           <span>Welcome {loggedInUser}</span>
           <div className="w-6 md:hidden" />
         </div>
 
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto p-6">
-
           {activeItem ? (
             <div className="space-y-4 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl p-6 rounded-2xl border border-black/10 dark:border-white/10">
-              <p><b>You said:</b> {activeItem.originalText}</p>
-              <p><b>Corrected:</b> {activeItem.correctedText}</p>
-              <p><b>Explanation:</b> {activeItem.explanation}</p>
-              <p><b>Vocabulary:</b> {activeItem.vocabulary}</p>
+              <p>
+                <b>You said:</b> {activeItem.originalText}
+              </p>
+              <p>
+                <b>Corrected:</b> {activeItem.correctedText}
+              </p>
+              <p>
+                <b>Explanation:</b> {activeItem.explanation}
+              </p>
+              <p>
+                <b>Vocabulary:</b> {activeItem.vocabulary}
+              </p>
 
               <button
                 onClick={() => speakText(activeItem.correctedText)}
@@ -261,7 +274,6 @@ function VoiceLearning() {
             </p>
           )}
 
-          {/* COUNTDOWN LOADING */}
           {loading && (
             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400 italic mt-3">
               <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
@@ -278,12 +290,16 @@ function VoiceLearning() {
         <div className="border-t border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl p-4 flex flex-col gap-3">
           <button
             onClick={isListening ? stopListening : startListening}
-            disabled={isSpeaking}
-            className={`py-3 rounded-xl text-white font-medium ${
+            disabled={isSpeaking || loading}
+            className={`py-3 rounded-xl text-white font-medium transition ${
               isListening ? "bg-red-600" : "bg-indigo-600 hover:bg-indigo-500"
-            }`}
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {isListening ? "Stop Listening" : "Start Speaking"}
+            {loading
+              ? "AI is thinking..."
+              : isListening
+                ? "Stop Listening"
+                : "Start Speaking"}
           </button>
 
           <button

@@ -539,19 +539,15 @@ function DebateRoom() {
 
     if (loading) {
       setCountdown(5);
-
       interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev > 1) return prev - 1;
-          return 0;
-        });
+        setCountdown((prev) => (prev > 1 ? prev - 1 : 0));
       }, 1000);
     }
 
     return () => clearInterval(interval);
   }, [loading]);
 
-  /* ================= SPEAK FUNCTION (CLIP FIXED) ================= */
+  /* ================= SPEAK FUNCTION ================= */
   const speakAI = (text) => {
     if (!("speechSynthesis" in window) || !text) return;
 
@@ -566,7 +562,7 @@ function DebateRoom() {
 
       const voices = synth.getVoices();
       const englishVoice = voices.find((v) =>
-        v.lang.toLowerCase().includes("en")
+        v.lang.toLowerCase().includes("en"),
       );
       if (englishVoice) utterance.voice = englishVoice;
 
@@ -616,7 +612,6 @@ function DebateRoom() {
     }
   };
 
-  /* ================= SESSION RESTORE ================= */
   useEffect(() => {
     if (!topic) return;
     startDebate();
@@ -679,7 +674,6 @@ function DebateRoom() {
     }
   };
 
-  /* ================= END DEBATE ================= */
   const endDebate = () => {
     const closingMessage =
       "Thank you for this engaging debate. You expressed your ideas clearly and confidently. Would you like to start a new topic?";
@@ -704,29 +698,38 @@ function DebateRoom() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
+        {/* Avatar (Fixed + Optimized) */}
         <div className="flex flex-col items-center">
           <div
-            className={`w-40 h-40 rounded-full bg-indigo-100 dark:bg-zinc-800 flex items-center justify-center ${
-              isSpeaking ? "ring-4 ring-indigo-400 scale-105" : ""
-            }`}
+            className={`w-40 h-40 rounded-full overflow-hidden 
+                        bg-zinc-200 dark:bg-zinc-800 
+                        flex items-center justify-center
+                        shadow-lg transition-all duration-300
+                        ${isSpeaking ? "ring-4 ring-indigo-400 scale-105 talking " : ""}
+                      `}
           >
-            <img src="/aidbtr.png" className="max-h-full" />
+            <img
+              src="/aidbtr.png"
+              alt="AI Debater"
+              className="w-full h-full object-cover"
+            />
           </div>
-          <p className="text-sm mt-2">AI Debater</p>
+          <p className="text-sm mt-3 text-gray-600 dark:text-gray-400">
+            AI Debater
+          </p>
         </div>
 
+        {/* Message Card (Improved) */}
         <div className="max-w-xl w-full">
-          <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow max-h-[250px] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-md border dark:border-zinc-800 max-h-[250px] overflow-y-auto">
             {loading ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
-                  <span>
-                    {countdown > 0
-                      ? `AI is thinking... ${countdown}s`
-                      : "Still working..."}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
+                <span>
+                  {countdown > 0
+                    ? `AI is thinking... ${countdown}s`
+                    : "Still working..."}
+                </span>
               </div>
             ) : (
               aiMessage

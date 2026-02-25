@@ -27,3 +27,12 @@ body {
 * {
   transition: background-color 250ms ease, border-color 250ms ease;
 }
+
+@keyframes talk {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(1.05); }
+  100% { transform: scaleY(1); }
+}
+.talking {
+  animation: talk 0.25s infinite ease-in-out;
+}
