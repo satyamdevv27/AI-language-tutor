@@ -1,20 +1,47 @@
 import { useEffect, useRef, useState } from "react";
+
 const API_URL = import.meta.env.VITE_API_URL;
+
 function VoiceLearning() {
   /* ---------------- STATES ---------------- */
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [loading, setLoading] = useState(false);
+  const [thinkingTime, setThinkingTime] = useState(5);
 
   const [history, setHistory] = useState([]);
   const [activeItem, setActiveItem] = useState(null);
-
-  
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const recognitionRef = useRef(null);
-  const loggedInUser = JSON.parse(localStorage.getItem("user"))?.name || "User";
+  const loggedInUser =
+    JSON.parse(localStorage.getItem("user"))?.name || "User";
+
+  /* ---------------- PRELOAD VOICES ---------------- */
+  useEffect(() => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
+
+  /* ---------------- COUNTDOWN TIMER ---------------- */
+  useEffect(() => {
+    let interval;
+
+    if (loading) {
+      setThinkingTime(5);
+
+      interval = setInterval(() => {
+        setThinkingTime((prev) => {
+          if (prev > 1) return prev - 1;
+          return 0;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     fetchVoiceHistory();
@@ -37,11 +64,14 @@ function VoiceLearning() {
     }
   };
 
+  /* ---------------- SPEECH RECOGNITION ---------------- */
+
   const startListening = () => {
     if (!("webkitSpeechRecognition" in window)) {
       alert("Speech recognition not supported");
       return;
     }
+
     const recognition = new window.webkitSpeechRecognition();
     recognition.lang = "en-US";
     recognition.interimResults = true;
@@ -50,6 +80,7 @@ function VoiceLearning() {
       setIsListening(true);
       setTranscript("");
     };
+
     recognition.onresult = (event) => {
       let text = "";
       for (let i = 0; i < event.results.length; i++) {
@@ -57,6 +88,7 @@ function VoiceLearning() {
       }
       setTranscript(text);
     };
+
     recognition.onend = () => setIsListening(false);
 
     recognition.start();
@@ -68,22 +100,40 @@ function VoiceLearning() {
     setIsListening(false);
   };
 
+  /* ---------------- SPEECH SYNTHESIS FIXED ---------------- */
+
   const removeEmojis = (text) =>
     text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "").trim();
 
   const speakText = (text) => {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(removeEmojis(text));
-    utterance.lang = "en-US";
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    if (!("speechSynthesis" in window) || !text) return;
+
+    const synth = window.speechSynthesis;
+    synth.cancel();
+
+    setTimeout(() => {
+      const cleanText = " " + removeEmojis(text);
+
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = "en-US";
+      utterance.rate = 1;
+      utterance.pitch = 1;
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      synth.speak(utterance);
+    }, 150);
   };
+
+  /* ---------------- SEND TO BACKEND ---------------- */
 
   const sendForLearning = async () => {
     if (!transcript.trim() || loading) return;
+
     setLoading(true);
+
     try {
       const res = await fetch(`${API_URL}/api/voice`, {
         method: "POST",
@@ -93,6 +143,7 @@ function VoiceLearning() {
         },
         body: JSON.stringify({ text: transcript }),
       });
+
       const data = await res.json();
       setActiveItem(data);
       setTranscript("");
@@ -106,6 +157,7 @@ function VoiceLearning() {
 
   const deleteLearning = async (id) => {
     if (!window.confirm("Delete this learning record?")) return;
+
     try {
       await fetch(`${API_URL}/api/voice/${id}`, {
         method: "DELETE",
@@ -113,6 +165,7 @@ function VoiceLearning() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+
       setHistory((prev) => prev.filter((item) => item._id !== id));
       if (activeItem?._id === id) setActiveItem(null);
     } catch (err) {
@@ -120,10 +173,12 @@ function VoiceLearning() {
     }
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <div className="h-screen w-screen flex bg-gradient-to-br from-zinc-100 via-gray-100 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black text-gray-900 dark:text-white">
 
-      {/* OVERLAY — same as Chat.jsx */}
+      {/* OVERLAY */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
@@ -131,14 +186,13 @@ function VoiceLearning() {
         />
       )}
 
-      {/* SIDEBAR — same Chat.jsx logic, same UI */}
+      {/* SIDEBAR */}
       <div
         className={`fixed z-50 top-0 left-0 h-full w-[75%] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border-r border-black/10 dark:border-white/10 p-4 overflow-y-auto
         transform transition-transform duration-300
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:static md:translate-x-0 md:w-[25%]`}
       >
-        {/* Mobile Header */}
         <div className="flex items-center justify-between mb-4 md:hidden">
           <h2 className="font-semibold">Voice History</h2>
           <button onClick={() => setSidebarOpen(false)} className="text-xl">✖</button>
@@ -157,7 +211,7 @@ function VoiceLearning() {
             }`}
             onClick={() => {
               setActiveItem(item);
-              setSidebarOpen(false); // 👈 same as Chat.jsx
+              setSidebarOpen(false);
             }}
           >
             <span className="truncate">{item.title}</span>
@@ -166,7 +220,7 @@ function VoiceLearning() {
                 e.stopPropagation();
                 deleteLearning(item._id);
               }}
-              className="ml-2 text-red-500 opacity-0 group-hover:opacity-100"
+              className="ml-2 text-red-500 opacity-0 group-hover:opacity-100 transition"
             >
               🗑️
             </button>
@@ -186,6 +240,7 @@ function VoiceLearning() {
 
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto p-6">
+
           {activeItem ? (
             <div className="space-y-4 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl p-6 rounded-2xl border border-black/10 dark:border-white/10">
               <p><b>You said:</b> {activeItem.originalText}</p>
@@ -206,10 +261,16 @@ function VoiceLearning() {
             </p>
           )}
 
+          {/* COUNTDOWN LOADING */}
           {loading && (
-            <p className="text-sm text-gray-500 dark:text-zinc-400 italic mt-3">
-              AI is thinking...
-            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400 italic mt-3">
+              <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
+              <span>
+                {thinkingTime > 0
+                  ? `AI is thinking... ${thinkingTime}s`
+                  : "Still working..."}
+              </span>
+            </div>
           )}
         </div>
 
